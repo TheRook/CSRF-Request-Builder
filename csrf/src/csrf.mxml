@@ -23,6 +23,11 @@
 		private function CSRF():void{
 			var params:Object = FlexGlobals.topLevelApplication.parameters;
 			
+			if(params['url'] == null){
+				trace("url must be set");
+				return;
+			}
+			
 			//We have to have a url
 			var request:URLRequest = new URLRequest(unescape(params['url']));
 			delete params['url'];
